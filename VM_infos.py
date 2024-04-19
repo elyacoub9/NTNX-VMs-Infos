@@ -1,10 +1,11 @@
 import requests
 from datetime import datetime
 import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 username = input("your PC user name: ")
 password = input("your PC Password: ")
@@ -135,11 +136,9 @@ for entity in entities:
         return cluster
 
     def vm_creation_time():
-
         creation_time=metadata["creation_time"]
         creation_time=datetime.fromisoformat(creation_time)
         creation_time=creation_time.strftime("%Y-%m-%d %H:%M")
-
         return creation_time
 
     def vm_categories():
