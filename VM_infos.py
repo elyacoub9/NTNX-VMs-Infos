@@ -117,10 +117,11 @@ for entity in entities:
             if status_or_os=="status":
                 ngt_status=ntnx_gest_tools["ngt_state"]
                 return ngt_status
+            
             elif status_or_os=="os":
-
-                os=ntnx_gest_tools["guest_os_version"]
-                return os
+                if "guest_tools" in ntnx_gest_tools:
+                    os=ntnx_gest_tools["guest_os_version"]
+                    return os
         else:
             return "NGT not installed"
 
@@ -196,28 +197,34 @@ payload2 = {
 
 response2 = requests.post(url2, json=payload2, headers=headers, auth=auth,verify=False)
 
+
 data2 = response2.json()
 #print((data["group_results"][0]["entity_results"][1]["data"][0]))
 #print("---------")
 #print((data["group_results"][0]["entity_results"][1]["data"][1]
+entity_results=data2["group_results"][0]["entity_results"]
+test_if_efficiency_exit=entity_results[0]["data"][1]["values"]
+print(len(test_if_efficiency_exit))
 
-def vm_efficiency(my_vm):
-    vms_efficiency={}
-    entity_results=data2["group_results"][0]["entity_results"]
-    for entitie2 in entity_results:
+if len(test_if_efficiency_exit)!=0:
 
-        vm_name=entitie2["data"][0]["values"][0]["values"]
-        efficiency=entitie2["data"][1]["values"][0]["values"]
+    def vm_efficiency(my_vm):
+        vms_efficiency={}
+        for entitie2 in entity_results:
 
-        vms_efficiency["".join(vm_name)]="".join(efficiency)
-    return (vms_efficiency[my_vm])
+            vm_name=entitie2["data"][0]["values"][0]["values"]
+            efficiency=entitie2["data"][1]["values"][0]["values"]
 
-vmss=vms_infos
-for i in range(len(vms_infos)):
-    
-    vm_name=vms_infos[i][0]
-    vms_infos[i].append(str(vm_efficiency(vm_name)))
+            vms_efficiency["".join(vm_name)]="".join(efficiency)
+        return (vms_efficiency[my_vm])
 
+    vmss=vms_infos
+    for i in range(len(vms_infos)):
+
+        vm_name=vms_infos[i][0]
+        vms_infos[i].append(str(vm_efficiency(vm_name)))
+else :
+    print("can't retrieve vms efficiency status")
     
 
 wb = Workbook()
