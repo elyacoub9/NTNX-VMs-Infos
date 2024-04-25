@@ -1,18 +1,30 @@
 import requests
-from datetime import datetime
 import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from datetime import datetime
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, Alignment
+import getpass
 
 
-username = input("your PC user name: ")
-password = input("your PC Password: ")
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+requests.packages.urllib3.disable_warnings()
+
+
+
 pc_ip =input("your PC ip: ")
+username = input("your PC user name: ")
+password = getpass.getpass("your PC Password: ")
+distination_file=input("distination file (.xlsx): ")
 
 url = f'https://{pc_ip}:9440/api/nutanix/v3/vms/list'
 
-payload = { }
+payload = { 
+    "kind": "vm",
+    "sort_attribute": "vm_name",
+    "length": 1000,
+    "sort_order": "DESCENDING",
+    "offset": 0}
 
 headers = {'Content-Type': "application/json" }
 
@@ -43,7 +55,7 @@ for entity in entities:
                 description=status["description"]
                 return description
             else:
-                return None
+                return "no data "
 
     def vm_ram_cpu(RAM_or_CPU):
         if RAM_or_CPU=="CPU":
@@ -91,16 +103,12 @@ for entity in entities:
                         ips.append(ip)
                         result_list=ips
                     else:
-                        return None
-                    
-            for result in result_list:
-                if len(result_list)==1:
-                    results=result_list[0]
-                elif len(result_list)>1:
-                    results=results+"\n"+result
+                        return "no data "
+                
+            results="\n".join(result_list)
             return(results.lstrip())
         else:
-            return None
+            return "no data "
 
 
     def vm_ngt(status_or_os):
@@ -115,7 +123,7 @@ for entity in entities:
                 os=ntnx_gest_tools["guest_os_version"]
                 return os
         else:
-            return None
+            return "NGT not installed"
 
     def vm_powerstate_host(powerstate_or_host):
         power_state=status["resources"]["power_state"]
@@ -146,16 +154,11 @@ for entity in entities:
         list_of_categories=[]
         categories_data=metadata["categories"]
         categories=""
+        
         for key, value in categories_data.items():
             list_of_categories.append(f"{key}:{value}")
-        
-
-        for category in list_of_categories :
-            if len(list_of_categories)==1:
-                categories=list_of_categories[0]
-            elif len(list_of_categories)>1:
-                categories=categories+"\n"+category
-                return(categories.lstrip("\n"))
+            
+        categories="\n".join(list_of_categories)
         return(categories)
     
 
@@ -171,23 +174,81 @@ for entity in entities:
 
        
     vms_infos.append(vm)
-    #print (row)
 
+
+#link VMs with its efficiency status
+
+url2 = f'https://{pc_ip}:9440/api/nutanix/v3/groups'
+
+payload2 = {
+    
+    "entity_type": "mh_vm",
+    "sort_attribute": "vm_name",
+    "group_member_attributes": [
+        {
+            "attribute": "vm_name"
+        },
+        {
+            "attribute": "capacity.vm_efficiency_status"
+        }
+    ]
+}
+
+
+response2 = requests.post(url2, json=payload2, headers=headers, auth=auth,verify=False)
+
+data2 = response2.json()
+#print((data["group_results"][0]["entity_results"][1]["data"][0]))
+#print("---------")
+#print((data["group_results"][0]["entity_results"][1]["data"][1]
+
+def vm_efficiency(my_vm):
+    vms_efficiency={}
+    entity_results=data2["group_results"][0]["entity_results"]
+    for entitie2 in entity_results:
+
+        vm_name=entitie2["data"][0]["values"][0]["values"]
+        efficiency=entitie2["data"][1]["values"][0]["values"]
+
+        vms_efficiency["".join(vm_name)]="".join(efficiency)
+    return (vms_efficiency[my_vm])
+
+vmss=vms_infos
+for i in range(len(vms_infos)):
+    
+    vm_name=vms_infos[i][0]
+    vms_infos[i].append(str(vm_efficiency(vm_name)))
+
+    
 
 wb = Workbook()
 ws = wb.active
-ws.append(["VM name", "description", "Memory(Gib)", "vCPU", "number of disks", "total storage(Gib)", "Subnets", "IP address", "NGT Status", "OS", "Power State", "Host", "Cluster", "Creation Time", "categories"])
+ws.append(["VM name", "description", "Memory(Gib)", "vCPU", "number of disks", "total storage(Gib)", "Subnets", "IP address", "NGT Status", "OS", "Power State", "Host", "Cluster", "Creation Time", "categories","vm efficiency"])
 
-for row in vms_infos:
-    
-    ws.append(row)
-
-ft = Font(bold=True)
-for row in ws["A1:O1"]:
+ft = Font(bold=True) # <---thanks to Chat-GPT
+for row in ws["A1:P1"]:
     for cell in row:
         cell.font = ft
+        
 
-wb.save("NTNXvminfos.xlsx")
+for row in vms_infos:
+    ws.append(row)
+    
+    for row in ws.iter_rows():# <---thanks to Chat-GPT
+        for cell in row:
+            alignment = Alignment(vertical='center')
+            cell.alignment = alignment
+
+for col in ws.columns:    # <---thanks to Chat-GPT
+    max_length = 0
+    column = col[0].column_letter
+    for cell in col:
+        if len(str(cell.value)) > max_length:
+            max_length = len(str(cell.value))
+    adjusted_width = max_length
+    ws.column_dimensions[column].width = adjusted_width 
+
+wb.save(distination_file)
 
 
 
