@@ -8,7 +8,6 @@ import getpass
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-requests.packages.urllib3.disable_warnings()
 
 
 
