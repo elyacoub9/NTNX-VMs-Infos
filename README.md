@@ -15,7 +15,6 @@ make sure
 1. Clone this repo locally:
    ```bash
    git clone https://github.com/elyacoub9/NTNX-VMs-Infos.git
-   cd NTNX-VMs-Infos
    ```
    ```bash
    cd NTNX-VMs-Infos
