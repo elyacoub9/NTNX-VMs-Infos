@@ -27,6 +27,7 @@ make sure
    py VM_infos.py
    ```
 
-
+## Usage
+- add error handling (Failing Silently)
 
 
