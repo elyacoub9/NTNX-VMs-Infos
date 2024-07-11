@@ -1,14 +1,10 @@
 
-# NTNX-VMs-Infos
-
-Python script to gather all the details needed for your VMs created on Nutanix into one Excel file.
-
 ## Description
 
-This Python script collects all necessary details for your virtual machines (VMs) deployed on Nutanix infrastructure and organizes them into a single Excel file for easy access and management.
+This Python script collects all necessary details for your virtual machines (VMs) deployed on Nutanix infrastructure and organizes them into a single Excel file.
 
-With this script, you will retrieve the following information for each VM: "VM name", "description", "Memory(GiB)", "vCPU", "Number of disks", "total storage(GiB)", "Subnets", "IP address", "NGT Status", "OS", "Power State", "Host", "Cluster", "Creation Time", "categories", and "VM efficiency" 
-make sure 
+It will retrieve the following information for each VM: "VM name", "description", "Memory(GiB)", "vCPU", "Number of disks", "total storage(GiB)", "Subnets", "IP address", "NGT Status", "OS", "Power State", "Host", "Cluster", "Creation Time", "categories", and "VM efficiency" 
+nb: the script won't retrieve (VM efficiency) if your cluster has a licensing violation. 
 
 ## Usage
 
